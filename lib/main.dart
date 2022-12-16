@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
             Center(
               child: Text(
                 timerText,
-                style: TextStyle(fontSize: 160, fontWeight: FontWeight.bold, color: Colors.blue),
+                style: const TextStyle(fontSize: 160, fontWeight: FontWeight.bold, color: Colors.blue),
               ),
             ),
             const Spacer(flex: 2,),
@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                       },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
-                          _currentInputHours = int.parse(value!);
+                          _currentInputHours = int.parse(value);
                         }
                       },
                     ),
@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                       },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
-                          _currentInputMinutes = int.parse(value!);
+                          _currentInputMinutes = int.parse(value);
                         }
                       },
                     ),
@@ -188,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                       },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
-                          _currentInputSeconds = int.parse(value!);
+                          _currentInputSeconds = int.parse(value);
                         }
                       },
                     ),
