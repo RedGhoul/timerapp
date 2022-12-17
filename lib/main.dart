@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,18 +14,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Timer App',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const HomePage(title: 'Timer App'),
@@ -34,16 +27,6 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -51,7 +34,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Timer _timer = Timer.periodic(const Duration(seconds: 1), (timer) { });
+
   int _currentInputSeconds = 0;
   int _currentInputMinutes = 0;
   int _currentInputHours = 0;
@@ -61,11 +44,20 @@ class _HomePageState extends State<HomePage> {
   bool _isTimerActive = false;
   bool _areFormFieldsEnabled = true;
 
+  late AudioPlayer _audioPlayer;
+  late Timer _timer;
   static const EdgeInsets insets = EdgeInsets.only(left:180.0, top:40.0, right:180.0);
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  String get timerText =>
+  String get timerChangeText =>
       '${_currentHours.toString().padLeft(2,'0')} : ${_currentMinutes.toString().padLeft(2,'0')} : ${_currentSeconds.toString().padLeft(2,'0')}';
+
+
+  void _setWindowSize() async {
+    var size = await DesktopWindow.getWindowSize();
+    await DesktopWindow.setMinWindowSize(Size(size.width * 0.9,size.height));
+    await DesktopWindow.setMaxWindowSize(Size(size.width * 0.9,size.height));
+  }
 
   void _startTimer() {
     Duration currentDuration = Duration(hours: _currentInputHours, minutes: _currentInputMinutes, seconds: _currentInputSeconds);
@@ -75,8 +67,8 @@ class _HomePageState extends State<HomePage> {
           _timer.cancel();
           _isTimerActive = false;
           _areFormFieldsEnabled = true;
+          _audioPlayer.play(AssetSource('audio/natural-thunder.mp3'));
         });
-        AudioPlayer().play(AssetSource('audio/natural-thunder.mp3'));
       } else {
         setState(() {
           _isTimerActive = true;
@@ -90,29 +82,44 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _setWindowSize();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: _isTimerActive ? Column(
           children: [
             const Spacer(flex: 1,),
+            const Center(
+              child: Text(
+                'Counting Up To:',
+                style: TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+            ),
             Center(
               child: Text(
-                timerText,
+                '${_currentInputHours.toString().padLeft(2,'0')} : ${_currentInputMinutes.toString().padLeft(2,'0')} : ${_currentInputSeconds.toString().padLeft(2,'0')}',
+                style: const TextStyle(fontSize: 160, fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+            ),
+            const Spacer(flex: 1,),
+            Center(
+              child: Text(
+                timerChangeText,
                 style: const TextStyle(fontSize: 160, fontWeight: FontWeight.bold, color: Colors.blue),
               ),
             ),
@@ -124,7 +131,6 @@ class _HomePageState extends State<HomePage> {
             const Spacer(flex: 1,),
             Form(
               key: _formKey,
-
               child: Column(
                 children: [
                   Padding(
@@ -136,12 +142,6 @@ class _HomePageState extends State<HomePage> {
                         border: OutlineInputBorder(),
                         hintText: 'Enter Hours',
                       ),
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please Enter Hours or Another Value';
-                        }
-                        return null;
-                      },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
                           _currentInputHours = int.parse(value);
@@ -158,12 +158,6 @@ class _HomePageState extends State<HomePage> {
                         border: OutlineInputBorder(),
                         hintText: 'Enter Minutes',
                       ),
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please Enter Minutes or Another Value';
-                        }
-                        return null;
-                      },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
                           _currentInputMinutes = int.parse(value);
@@ -180,12 +174,6 @@ class _HomePageState extends State<HomePage> {
                         border: OutlineInputBorder(),
                         hintText: 'Enter Seconds',
                       ),
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please Enter Seconds or Another Value';
-                        }
-                        return null;
-                      },
                       onChanged: (String? value) {
                         if(value != null && value.isNotEmpty){
                           _currentInputSeconds = int.parse(value);
@@ -227,7 +215,9 @@ class _HomePageState extends State<HomePage> {
           child: FloatingActionButton(
             onPressed: (){
                 _timer.cancel();
+                _audioPlayer.stop();
                 setState(() {
+                  _areFormFieldsEnabled = true;
                   _isTimerActive = false;
                 });
               },
@@ -235,7 +225,7 @@ class _HomePageState extends State<HomePage> {
             child: const Icon(Icons.exit_to_app),
           ),
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
